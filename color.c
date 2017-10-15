@@ -4,6 +4,7 @@
 
 RGB hsvToRGB(HSV hsv) {
   double r = 0, g = 0, b = 0;
+  hsv.h*=360;
   if (hsv.s == 0)
 	{
 		r = hsv.v;
@@ -14,7 +15,6 @@ RGB hsvToRGB(HSV hsv) {
 	{
 		int i;
 		double f, p, q, t;
-
 		if (hsv.h == 360)
 			hsv.h = 0;
 		else
