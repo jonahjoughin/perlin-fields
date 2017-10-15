@@ -75,7 +75,7 @@ int main (int argc, char *argv[]) {
     //Log Progress
     if (!i%10-9) progressBar("Drawing Particles",25,i+1,particleSteps);
     drawPoints(cr,particles,numParticles,useXORBlending);
-    updateParticles(particles,numParticles,outputWidth,outputHeight,noiseScale,particleFieldMode);
+    updateParticles(particles,numParticles,outputWidth,outputHeight,noiseScale);
   }
 
   //Push particles onto main layer
@@ -124,12 +124,11 @@ void drawPoints(cairo_t *cr, Particle * particles, int numParticles, int useXORB
 void drawParticle(cairo_t *cr, Particle particle) {
 
   //Draw line from particle's previous position to current position
-  cairo_move_to(cr,particle.x_,particle.y_);
+  cairo_move_to(cr,particle.prevX,particle.prevY);
   cairo_line_to(cr,particle.x,particle.y);
   cairo_stroke(cr);
 }
 
-//Show progress bar in terminal
 void progressBar(char * label, int bars, int progress, int total) {
   double decimalProgress = (double)progress/total;
   //Clear line and reset to default color
@@ -140,7 +139,7 @@ void progressBar(char * label, int bars, int progress, int total) {
   else {
     //Clear line and how label
     printf("\r\e[K%s: \033[22;32m[",label);
-    
+
     char * progressBar = malloc(sizeof(char)*(bars+1));
     int currentStep = bars*decimalProgress;
 
