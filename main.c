@@ -2,90 +2,82 @@
 #include <stdio.h>
 #include <time.h>
 #include <cairo.h>
-#include <math.h>
 #include <string.h>
 
 #include "perlin.h"
 #include "particle.h"
+#include "color.h"
 
 void drawBackground(cairo_t *cr,int w,int h,int v,double hue, double hueRange, double sat, double val);
-void drawPoints(cairo_t *cr, Particle * particles, int n, int xor);
-float noise(float x, float y);
-void progressBar(char * label, int steps, double progress);
-void set_source_hsv(cairo_t *cr,double h, double s, double v);
-void set_source_blend(cairo_t *cr,double h, double s, double v, double a);
+void drawPoints(cairo_t *cr, Particle * particles, int numParticles, int useXORBlending);
+void progressBar(char * label, int bars, double progress);
 
-int
-main (int argc, char *argv[])
-{
-
-        //2384x3371
-        char defaultPath[] = "filename.png";
-        char *inputPath = malloc(sizeof(char)*64);
-        char *path = defaultPath;
-        //int w = 14043;
-        int w = 24000;
-        //int h = 9933;
-        int h = 15000;
-        int v = 800;
-        int n = 256000;
-        int t = 0;
-        int steps = 1000;
-        int xor = 1;
+int main (int argc, char *argv[]) {
+        srand(time(NULL));
+        char *defaultOutputPath = "./filename.png";
+        char *passedOutputPath = malloc(sizeof(char)*64);
+        char *outputPath = defaultOutputPath;
+        int outputWidth = 24000;
+        int outputHeight = 15000;
+        int noiseScale = 270;
+        int numParticles = 256000;
+        int particleFieldMode = 0;
+        int particleSteps = 1000;
+        int useXORBlending = 1;
         double hue = 0.5;
         double hueRange = 0.05;
         double sat = 0.6;
         double val = 0.6;
+        //Set variables from passed arguments
         for(int i=0; i<argc; ++i) {
-          if (strcmp(argv[i],"-w")==0) w = atoi(argv[i+1]);
-          if (strcmp(argv[i],"-h")==0) h = atoi(argv[i+1]);
-          if (strcmp(argv[i],"--hue")==0) hue = atof(argv[i+1]);
-          if (strcmp(argv[i],"--hueRange")==0) hueRange = atof(argv[i+1]);
-          if (strcmp(argv[i],"--sat")==0) sat = atof(argv[i+1]);
-          if (strcmp(argv[i],"--val")==0) val = atof(argv[i+1]);
-          if (strcmp(argv[i],"--steps")==0) steps = atoi(argv[i+1]);
-          if (strcmp(argv[i],"-n")==0) n = atoi(argv[i+1]);
-          if (strcmp(argv[i],"-v")==0) v = atoi(argv[i+1]);
-          if (strcmp(argv[i],"-t")==0) t = atoi(argv[i+1]);
-          if (strcmp(argv[i],"-f")==0) {
-            strcpy(inputPath,argv[i+1]);
-            path = inputPath;
+          if (strcmp(argv[i],"width")==0) outputWidth = atoi(argv[i+1]);
+          if (strcmp(argv[i],"height")==0) outputHeight = atoi(argv[i+1]);
+          if (strcmp(argv[i],"hue")==0) hue = atof(argv[i+1]);
+          if (strcmp(argv[i],"hueRange")==0) hueRange = atof(argv[i+1]);
+          if (strcmp(argv[i],"sat")==0) sat = atof(argv[i+1]);
+          if (strcmp(argv[i],"val")==0) val = atof(argv[i+1]);
+          if (strcmp(argv[i],"steps")==0) particleSteps = atoi(argv[i+1]);
+          if (strcmp(argv[i],"numParticles")==0) numParticles = atoi(argv[i+1]);
+          if (strcmp(argv[i],"noiseScale")==0) noiseScale = atoi(argv[i+1]);
+          if (strcmp(argv[i],"mode")==0) particleFieldMode = atoi(argv[i+1]);
+          if (strcmp(argv[i],"output")==0) {
+            strcpy(passedOutputPath,argv[i+1]);
+            outputPath = passedOutputPath;
           }
-          if (strcmp(argv[i],"-s")==0) {
+          if (strcmp(argv[i],"scale")==0) {
             double s = atof(argv[i+1]);
-            w*=s;
-            h*=s;
-            v*=s;
-            n*=(s*s);
+            outputWidth*=s;
+            outputHeight*=s;
+            noiseScale*=s;
+            numParticles*=(s*s);
           }
         }
-        if (val < 0.2) xor = 0;
-        Particle * particles = (Particle*) malloc(sizeof(Particle)*n);
-        //RGB * pixelBounds = (RGB*) malloc(sizeof(RGB)*w*h);
-        srand(time(NULL));
+        //Use blending with greater alpha if background is dark
+        if (val < 0.2) useXORBlending = 0;
+        Particle * particles = (Particle*) malloc(sizeof(Particle)*numParticles);
         cairo_surface_t *surface =
-            cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
+            cairo_image_surface_create (CAIRO_FORMAT_ARGB32, outputWidth, outputHeight);
         cairo_t *cr =
             cairo_create (surface);
-        drawBackground(cr,w,h,v,hue,hueRange,sat,val);
+        drawBackground(cr,outputWidth,outputHeight,noiseScale,hue,hueRange,sat,val);
         cairo_push_group(cr);
-        getParticles(particles,n,w,h,v,t);
-        for (int i = 0;i<steps;i++){
+        getParticles(particles,numParticles,outputWidth,outputHeight,noiseScale,particleFieldMode);
+        for (int i = 0;i<particleSteps;i++){
           if (i%10 == 0) {
-            double progress = (double)i/(double)steps;
+            double progress = (double)i/(double)particleSteps;
             progressBar("Drawing Particles",25,progress);
             //printf("\r\e[KDrawing particles %d%%",i*100/l);
             fflush(stdout);
           }
-          drawPoints(cr,particles,n,xor);
-          updateParticles(particles,n,w,h,v,t);
+          drawPoints(cr,particles,numParticles,useXORBlending);
+          updateParticles(particles,numParticles,outputWidth,outputHeight,noiseScale,particleFieldMode);
         }
         progressBar("Drawing Particles",25,1);
         cairo_pop_group_to_source (cr);
         cairo_paint_with_alpha (cr, 1);
 
         cairo_destroy (cr);
-        cairo_surface_write_to_png (surface, path);
+        cairo_surface_write_to_png (surface, outputPath);
         cairo_surface_destroy (surface);
         printf("\n");
         return 0;
@@ -98,28 +90,31 @@ void drawBackground(cairo_t *cr,int w,int h, int v, double hue, double hueRange,
       progressBar("Drawing background",25,progress);
     }
     for (int j=0;j<w;j++){
-      set_source_hsv (cr, (perlin2d((float)j/v,(float)i/v,1,10)*hueRange+hue)*360, sat, val);
+      HSV sourceHSV = {
+        (perlin2d((float)j/v,(float)i/v,1,10)*hueRange+hue)*360,
+        sat,
+        val
+      };
+      RGB sourceRGB = hsvToRGB(sourceHSV);
+      cairo_set_source_rgb(cr,sourceRGB.r,sourceRGB.g,sourceRGB.b);
       cairo_rectangle (cr, j, i, 1, 1);
       cairo_fill (cr);
     }
   }
   progressBar("Drawing Particles",25,1);
 }
-void drawPoints(cairo_t *cr, Particle * particles, int n, int xor) {
-  if (xor) cairo_set_operator(cr,CAIRO_OPERATOR_XOR);
+void drawPoints(cairo_t *cr, Particle * particles, int numParticles, int useXORBlending) {
+  if (useXORBlending) cairo_set_operator(cr,CAIRO_OPERATOR_XOR);
   cairo_set_source_rgba(cr,1,1,1,0.05);
-  for (int i = 0;i<n;i++){
-
+  for (int i = 0;i<numParticles;i++){
     Particle p = particles[i];
-    //set_source_blend (cr, (perlin2d(floor(p.x)/200,floor(p.y)/200,1,10)*0.2+0.5)*360, 0.6, 0.6,0.05);
-
     cairo_move_to(cr,p.x_,p.y_);
     cairo_line_to(cr,p.x,p.y);
     cairo_stroke(cr);
   }
 }
 
-void progressBar(char * label, int steps, double progress) {
+void progressBar(char * label, int bars, double progress) {
   if (progress == 0) {
     printf("\r\e[K\033[0m");
     fflush(stdout);
@@ -129,11 +124,11 @@ void progressBar(char * label, int steps, double progress) {
     fflush(stdout);
   }
   else {
-    int currentStep = steps*progress;
+    int currentStep = bars*progress;
     if (currentStep!=0) printf("\r\e[K%s: \033[22;32m[",label);
     else printf("\r\e[K%s: \033[22;32m[\033[0m",label);
-    char * progressBar = malloc(sizeof(char)*(steps+1));
-    for (int i = 0;i<steps;i++) {
+    char * progressBar = malloc(sizeof(char)*(bars+1));
+    for (int i = 0;i<bars;i++) {
       if (i+1<currentStep) printf("=");
       else if (i+1==currentStep) printf(">\033[0m");
       else printf("=");
@@ -144,143 +139,4 @@ void progressBar(char * label, int steps, double progress) {
     if (progress != 1) printf(" %d%%",percent);
     fflush(stdout);
   }
-
-}
-
-void set_source_hsv(cairo_t *cr,double h, double s, double v) {
-	double r = 0, g = 0, b = 0;
-
-	if (s == 0)
-	{
-		r = v;
-		g = v;
-		b = v;
-	}
-	else
-	{
-		int i;
-		double f, p, q, t;
-
-		if (h == 360)
-			h = 0;
-		else
-			h /= 60;
-
-		i = (int)trunc(h);
-		f = h - i;
-
-		p = v * (1.0 - s);
-		q = v * (1.0 - (s * f));
-		t = v * (1.0 - (s * (1.0 - f)));
-
-		switch (i)
-		{
-		case 0:
-			r = v;
-			g = t;
-			b = p;
-			break;
-
-		case 1:
-			r = q;
-			g = v;
-			b = p;
-			break;
-
-		case 2:
-			r = p;
-			g = v;
-			b = t;
-			break;
-
-		case 3:
-			r = p;
-			g = q;
-			b = v;
-			break;
-
-		case 4:
-			r = t;
-			g = p;
-			b = v;
-			break;
-
-		default:
-			r = v;
-			g = p;
-			b = q;
-			break;
-		}
-    cairo_set_source_rgb (cr, r, g, b);
-	}
-}
-void set_source_blend(cairo_t *cr,double h, double s, double v, double a) {
-  double r = 0, g = 0, b = 0;
-
-	if (s == 0)
-	{
-		r = v;
-		g = v;
-		b = v;
-	}
-	else
-	{
-		int i;
-		double f, p, q, t;
-
-		if (h == 360)
-			h = 0;
-		else
-			h /= 60;
-
-		i = (int)trunc(h);
-		f = h - i;
-
-		p = v * (1.0 - s);
-		q = v * (1.0 - (s * f));
-		t = v * (1.0 - (s * (1.0 - f)));
-
-		switch (i)
-		{
-		case 0:
-			r = v;
-			g = t;
-			b = p;
-			break;
-
-		case 1:
-			r = q;
-			g = v;
-			b = p;
-			break;
-
-		case 2:
-			r = p;
-			g = v;
-			b = t;
-			break;
-
-		case 3:
-			r = p;
-			g = q;
-			b = v;
-			break;
-
-		case 4:
-			r = t;
-			g = p;
-			b = v;
-			break;
-
-		default:
-			r = v;
-			g = p;
-			b = q;
-			break;
-		}
-    r = r+(1-r)*0.5;
-    g = g+(1-g)*0.5;
-    b = b+(1-b)*0.5;
-  }
-  cairo_set_source_rgba (cr, r, g, b, a);
 }
