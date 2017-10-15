@@ -7,7 +7,7 @@ These instructions will get you a copy of the project up and running on your loc
 ```
 Cairo
 ```
-### Installation
+### Prerequisite Installation
 https://www.cairographics.org/download/
 ### Compiling
 ```bash
