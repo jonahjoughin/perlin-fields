@@ -8,9 +8,8 @@ These instructions will get you a copy of the project up and running on your loc
 Cairo
 ```
 ### Installation
-macOS
-```
-sudo port install cairo
-```
-Windows
 https://www.cairographics.org/download/
+### Running
+```bash
+gcc -o main -I /opt/local/include/cairo -L /opt/local/lib -lcairo main.c perlin.c particle.c color.c
+```
