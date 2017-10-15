@@ -19,7 +19,7 @@ int main (int argc, char *argv[]) {
   srand(time(NULL));
 
   //Initialize variables
-  char *defaultOutputPath = "./filename.png";
+  char *defaultOutputPath = "./perlin-fields.png";
   char *passedOutputPath = malloc(sizeof(char)*64);
   char *outputPath = defaultOutputPath;
   int outputWidth = 24000;
