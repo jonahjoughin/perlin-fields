@@ -14,10 +14,8 @@ void drawParticle(cairo_t *cr, Particle particle);
 void progressBar(char * label, int bars, int progress, int total);
 
 int main (int argc, char *argv[]) {
-
   //Set rand seed
   srand(time(NULL));
-
   //Initialize variables
   char *defaultOutputPath = "./perlin-fields.png";
   char *passedOutputPath = malloc(sizeof(char)*64);
@@ -33,7 +31,6 @@ int main (int argc, char *argv[]) {
   double hueRange = 0.05;
   double sat = 0.6;
   double val = 0.6;
-
   //Set variables from passed arguments
   for(int i=0; i<argc; ++i) {
     if (strcmp(argv[i],"width")==0) outputWidth = atoi(argv[i+1]);
@@ -68,7 +65,6 @@ int main (int argc, char *argv[]) {
   cairo_t *cr = cairo_create (surface);
 
   drawBackground(cr,outputWidth,outputHeight,noiseScale,hue,hueRange,sat,val);
-
   //Draws particles in separate layer before recompositing in order to blend alpha properly
   cairo_push_group(cr);
   for (int i = 0;i<particleSteps;i++){
@@ -81,7 +77,6 @@ int main (int argc, char *argv[]) {
   //Push particles onto main layer
   cairo_pop_group_to_source (cr);
   cairo_paint_with_alpha (cr, 1);
-
   //Write to output path and exit
   cairo_destroy (cr);
   cairo_surface_write_to_png (surface, outputPath);
@@ -91,11 +86,9 @@ int main (int argc, char *argv[]) {
 
 void drawBackground(cairo_t *cr, int width, int height, int noiseScale, double hue, double hueRange, double sat, double val) {
   for (int y=0;y<height;y++){
-
     //Log progress
     if (!y%10-9) progressBar("Drawing background",25,y+1,height);
     for (int x=0;x<width;x++){
-
       //Calculate hsv color and convert to rgb
       HSV sourceHSV = {
         perlin2d((float)x/noiseScale,(float)y/noiseScale,1,10)*hueRange+hue,
@@ -103,7 +96,6 @@ void drawBackground(cairo_t *cr, int width, int height, int noiseScale, double h
         val
       };
       RGB sourceRGB = hsvToRGB(sourceHSV);
-
       //Draw pixel at x,y
       cairo_set_source_rgb(cr,sourceRGB.r,sourceRGB.g,sourceRGB.b);
       cairo_rectangle (cr, x, y, 1, 1);
@@ -113,7 +105,6 @@ void drawBackground(cairo_t *cr, int width, int height, int noiseScale, double h
 }
 
 void drawPoints(cairo_t *cr, Particle * particles, int numParticles, int useXORBlending) {
-
   //Set blending mode and particle color
   if (useXORBlending) cairo_set_operator(cr,CAIRO_OPERATOR_XOR);
   cairo_set_source_rgba(cr,1,1,1,0.05);
@@ -122,7 +113,6 @@ void drawPoints(cairo_t *cr, Particle * particles, int numParticles, int useXORB
 }
 
 void drawParticle(cairo_t *cr, Particle particle) {
-
   //Draw line from particle's previous position to current position
   cairo_move_to(cr,particle.prevX,particle.prevY);
   cairo_line_to(cr,particle.x,particle.y);

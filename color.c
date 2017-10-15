@@ -22,7 +22,6 @@ RGB hsvToRGB(HSV hsv) {
 
 		i = (int)trunc(hsv.h);
 		f = hsv.h - i;
-
 		p = hsv.v * (1.0 - hsv.s);
 		q = hsv.v * (1.0 - (hsv.s * f));
 		t = hsv.v * (1.0 - (hsv.s * (1.0 - f)));
