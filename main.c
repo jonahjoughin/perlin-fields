@@ -73,7 +73,7 @@ int main (int argc, char *argv[]) {
   cairo_push_group(cr);
   for (int i = 0;i<particleSteps;i++){
     //Log Progress
-    if (!i%10-9) progressBar("Drawing Particles",25,i,particleSteps);
+    if (!i%10-9) progressBar("Drawing Particles",25,i+1,particleSteps);
     drawPoints(cr,particles,numParticles,useXORBlending);
     updateParticles(particles,numParticles,outputWidth,outputHeight,noiseScale,particleFieldMode);
   }
@@ -86,7 +86,6 @@ int main (int argc, char *argv[]) {
   cairo_destroy (cr);
   cairo_surface_write_to_png (surface, outputPath);
   cairo_surface_destroy (surface);
-  printf("\n");
   return 0;
 }
 
@@ -94,7 +93,7 @@ void drawBackground(cairo_t *cr, int width, int height, int noiseScale, double h
   for (int y=0;y<height;y++){
 
     //Log progress
-    if (!y%10-9) progressBar("Drawing background",25,y,height);
+    if (!y%10-9) progressBar("Drawing background",25,y+1,height);
     for (int x=0;x<width;x++){
 
       //Calculate hsv color and convert to rgb
@@ -133,24 +132,26 @@ void drawParticle(cairo_t *cr, Particle particle) {
 //Show progress bar in terminal
 void progressBar(char * label, int bars, int progress, int total) {
   double decimalProgress = (double)progress/total;
-  if (decimalProgress == 0) {
-    printf("\r\e[K\033[0m");
-  }
-  else if (decimalProgress == 1) {
-    printf("\r\e[KComplete");
-  }
+  //Clear line and reset to default color
+  if (decimalProgress == 0) printf("\r\e[K\033[0m");
+  //Clear line and signal completino
+  else if (decimalProgress == 1) printf("\r\e[K%s: \033[22;32mComplete\033[0m\n",label);
+  //Show progress bar
   else {
-    int currentStep = bars*decimalProgress;
-    if (currentStep!=0) printf("\r\e[K%s: \033[22;32m[",label);
-    else printf("\r\e[K%s: \033[22;32m[\033[0m",label);
+    //Clear line and how label
+    printf("\r\e[K%s: \033[22;32m[",label);
+    
     char * progressBar = malloc(sizeof(char)*(bars+1));
+    int currentStep = bars*decimalProgress;
+
     for (int i = 0;i<bars;i++) {
-      if (i+1<currentStep) printf("=");
-      else if (i+1==currentStep) printf(">\033[0m");
+      if (i==currentStep)printf("\033[0m=");
+      else if (i+1==currentStep) printf(">");
       else printf("=");
     }
-    printf("]");
-    printf("\033[0m");
+    //Ensure reset to default color
+    printf("]\033[0m");
+    //Show progress as percentage
     int percentProgress = (int)(decimalProgress*100);
     if (decimalProgress != 1) printf(" %d%%",percentProgress);
   }
