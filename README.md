@@ -1,8 +1,8 @@
 # Perlin Fields
 Generative particle fields using perlin noise
 
-## Sample
-[![Perlin Fields](https://i.imgur.com/E5fWgfo.jpg)]()
+## Samples
+[![Perlin Fields](https://i.imgur.com/J7FW3V3.jpg)]()
 
 
 ## Getting Started
