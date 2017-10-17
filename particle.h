@@ -13,8 +13,8 @@ typedef struct Particle {
 
 float getDX(int width, int height, float x,float y,float noise,int mode);
 float getDY(int width, int height, float x,float y,float noise,int mode);
-Particle newParticle(int width, int height, int noiseScale, int mode);
-void getParticles(Particle * particles, int numParticles, int width, int height, int noiseScale, int mode);
-void updateParticles(Particle * particles, int numParticles,int width,int height,int noiseScale);
+Particle newParticle(int width, int height, int noiseScale, int mode,int xoff,int yoff);
+void getParticles(Particle * particles, int numParticles, int width, int height, int noiseScale, int mode,int xoff,int yoff);
+void updateParticles(Particle * particles, int numParticles,int width,int height,int noiseScale,int xoff, int yoff);
 
 #endif

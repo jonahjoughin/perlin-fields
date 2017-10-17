@@ -8,8 +8,8 @@
 #include "particle.h"
 #include "color.h"
 
-void drawBackground(cairo_t *cr,int width,int height,int noiseScale,double hue, double hueRange, double sat, double val);
-void drawPoints(cairo_t *cr, Particle * particles, int numParticles, int useXORBlending);
+void drawBackground(cairo_t *cr,int width,int height,int noiseScale,double hue, double hueRange, double sat, double val, int xoff, int yoff);
+void drawPoints(cairo_t *cr, Particle * particles, int numParticles, int useXORBlending, int useDarkParticles);
 void drawParticle(cairo_t *cr, Particle particle);
 void progressBar(char * label, int bars, int progress, int total);
 
@@ -27,6 +27,9 @@ int main (int argc, char *argv[]) {
   int particleFieldMode = 0;
   int particleSteps = 1000;
   int useXORBlending = 1;
+  int useDarkParticles = 0;
+  int xoff = rand()%100;
+  int yoff = rand()%100;
   double hue = 0.5;
   double hueRange = 0.05;
   double sat = 0.6;
@@ -55,23 +58,24 @@ int main (int argc, char *argv[]) {
       numParticles*=(s*s);
     }
   }
-  //Use blending with greater alpha if background is dark
-  if (val < 0.2) useXORBlending = 0;
+  //Use blending with greater alpha if background is high contrast
+  if (val < 0.2 || val > 0.9) useXORBlending = 0;
+  if (val > 0.9) useDarkParticles = 1;
 
   Particle * particles = (Particle*) malloc(sizeof(Particle)*numParticles);
-  getParticles(particles,numParticles,outputWidth,outputHeight,noiseScale,particleFieldMode);
+  getParticles(particles,numParticles,outputWidth,outputHeight,noiseScale,particleFieldMode,xoff,yoff);
 
   cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, outputWidth, outputHeight);
   cairo_t *cr = cairo_create (surface);
 
-  drawBackground(cr,outputWidth,outputHeight,noiseScale,hue,hueRange,sat,val);
+  drawBackground(cr,outputWidth,outputHeight,noiseScale,hue,hueRange,sat,val,xoff,yoff);
   //Draws particles in separate layer before recompositing in order to blend alpha properly
   cairo_push_group(cr);
   for (int i = 0;i<particleSteps;i++){
     //Log Progress
     if (!i%10-9) progressBar("Drawing Particles",25,i+1,particleSteps);
-    drawPoints(cr,particles,numParticles,useXORBlending);
-    updateParticles(particles,numParticles,outputWidth,outputHeight,noiseScale);
+    drawPoints(cr,particles,numParticles,useXORBlending, useDarkParticles);
+    updateParticles(particles,numParticles,outputWidth,outputHeight,noiseScale,xoff,yoff);
   }
 
   //Push particles onto main layer
@@ -84,14 +88,14 @@ int main (int argc, char *argv[]) {
   return 0;
 }
 
-void drawBackground(cairo_t *cr, int width, int height, int noiseScale, double hue, double hueRange, double sat, double val) {
+void drawBackground(cairo_t *cr, int width, int height, int noiseScale, double hue, double hueRange, double sat, double val, int xoff, int yoff) {
   for (int y=0;y<height;y++){
     //Log progress
     if (!y%10-9) progressBar("Drawing background",25,y+1,height);
     for (int x=0;x<width;x++){
       //Calculate hsv color and convert to rgb
       HSV sourceHSV = {
-        perlin2d((float)x/noiseScale,(float)y/noiseScale,1,10)*hueRange+hue,
+        perlin2d((float)x/noiseScale+xoff,(float)y/noiseScale+yoff,1,10)*hueRange+hue,
         sat,
         val
       };
@@ -104,10 +108,11 @@ void drawBackground(cairo_t *cr, int width, int height, int noiseScale, double h
   }
 }
 
-void drawPoints(cairo_t *cr, Particle * particles, int numParticles, int useXORBlending) {
+void drawPoints(cairo_t *cr, Particle * particles, int numParticles, int useXORBlending, int useDarkParticles) {
   //Set blending mode and particle color
   if (useXORBlending) cairo_set_operator(cr,CAIRO_OPERATOR_XOR);
-  cairo_set_source_rgba(cr,1,1,1,0.05);
+  if (useDarkParticles) cairo_set_source_rgba(cr,0,0,0,0.05);
+  else cairo_set_source_rgba(cr,1,1,1,0.05);
 
   for (int i = 0;i<numParticles;i++) drawParticle(cr,particles[i]);
 }
