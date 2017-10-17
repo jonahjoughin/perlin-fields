@@ -2,7 +2,7 @@
 Generative particle fields using perlin noise
 
 ## Sample
-[![Perlin Fields](https://i.imgur.com/jtXQeXT.jpg)]()
+[![Perlin Fields](https://i.imgur.com/E5fWgfo.jpg)]()
 
 
 ## Getting Started
