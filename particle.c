@@ -7,7 +7,9 @@
 
 #define PI 3.14159265358979323846
 
+//Get X component of particle's velocity
 float getDX(int width, int height, float x,float y,float noise,int mode) {
+  //Angle,rotation,x/width,y/height
   float a,r,xw,yh;
   switch(mode){
     case 0:
@@ -37,13 +39,16 @@ float getDX(int width, int height, float x,float y,float noise,int mode) {
     case 8:
       return sin(noise*PI*2/2)*cos(noise*PI*2/3)*3;
     case 9:
-      xw = x*1.5/width;
-      return sin(noise*PI*2/4)*cos(noise*PI*2/3)*(1+2*xw)*height/1500;
+      xw = x/width;
+      return sin(noise*PI*2/4)*cos(noise*PI*2/3)*(1+2*xw*xw);
     default:
       return cos(noise*PI*2);
   }
 }
+
+//Get Y component of particle's velocity
 float getDY(int width, int height, float x,float y,float noise,int mode){
+  //Angle,rotation,x/width,y/height
   float a,r,xw,yh;
   switch(mode){
     case 0:
@@ -73,13 +78,14 @@ float getDY(int width, int height, float x,float y,float noise,int mode){
     case 8:
       return cos(noise*PI*2/2)*sin(noise*PI*2/3);
     case 9:
-      yh = y*1.2/height;
-      return cos(noise*PI*2/4)*sin(noise*PI*2/3)*(1+4*yh*yh*yh)*height/1500;
+      yh = y/height;
+      return cos(noise*PI*2/4)*sin(noise*PI*2/3)*(1+4*yh*yh*yh);
     default:
       return sin(noise*PI*2);
   }
 }
 
+//Create single particle using specified parameters
 Particle newParticle(int width, int height, int noiseScale, int mode, int xoff, int yoff) {
   float x = rand()%(width+400)-200;
   float y = rand()%(height+400)-200;
@@ -89,6 +95,8 @@ Particle newParticle(int width, int height, int noiseScale, int mode, int xoff, 
   Particle p = { x, y, x, y, dx, dy, mode };
   return p;
 }
+
+//Fills Particle array particles using specified parameters
 void getParticles(Particle * particles, int numParticles, int width, int height, int noiseScale, int mode, int xoff, int yoff){
   for (int i = 0;i<numParticles;i++){
     particles[i] = newParticle(width,height,noiseScale,mode,xoff,yoff);
@@ -96,6 +104,7 @@ void getParticles(Particle * particles, int numParticles, int width, int height,
 }
 void updateParticles(Particle * particles, int numParticles,int width,int height,int noiseScale, int xoff, int yoff){
   for (int i = 0;i<numParticles;i++){
+    //Update particles position, direction
     Particle p = particles[i];
     p.prevX = p.x;
     p.prevY = p.y;
@@ -104,6 +113,7 @@ void updateParticles(Particle * particles, int numParticles,int width,int height
     float noise = perlin2d(p.x/noiseScale+xoff,p.y/noiseScale+yoff,1,1);
     p.dx = getDX(width,height,p.x,p.y,noise,p.mode);
     p.dy = getDY(width,height,p.x,p.y,noise,p.mode);
+    //Reset particle if out of bounds
     if (p.x < -200 || p.y < -200 || p.x > width+200 || p.y > height+200){
       p = newParticle(width,height,noiseScale,p.mode,xoff,yoff);
     }
