@@ -8,7 +8,7 @@
 #define PI 3.14159265358979323846
 
 float getDX(int width, int height, float x,float y,float noise,int mode) {
-  float a,r;
+  float a,r,xw,yh;
   switch(mode){
     case 0:
       return cos(noise*PI*2);
@@ -37,13 +37,14 @@ float getDX(int width, int height, float x,float y,float noise,int mode) {
     case 8:
       return sin(noise*PI*2/2)*cos(noise*PI*2/3)*3;
     case 9:
-      return sin(noise*PI*2/4)*cos(noise*PI*2/3)*(1+4*x*x/(width*width));
+      xw = x*1.5/width;
+      return sin(noise*PI*2/4)*cos(noise*PI*2/3)*(1+2*xw)*height/1500;
     default:
       return cos(noise*PI*2);
   }
 }
 float getDY(int width, int height, float x,float y,float noise,int mode){
-  float a,r;
+  float a,r,xw,yh;
   switch(mode){
     case 0:
       return sin(noise*PI*2);
@@ -72,7 +73,8 @@ float getDY(int width, int height, float x,float y,float noise,int mode){
     case 8:
       return cos(noise*PI*2/2)*sin(noise*PI*2/3);
     case 9:
-      return cos(noise*PI*2/4)*sin(noise*PI*2/3)*(1+4*y*y*y/(width*width*width));;
+      yh = y*1.2/height;
+      return cos(noise*PI*2/4)*sin(noise*PI*2/3)*(1+4*yh*yh*yh)*height/1500;
     default:
       return sin(noise*PI*2);
   }

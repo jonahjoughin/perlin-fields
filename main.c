@@ -89,21 +89,33 @@ int main (int argc, char *argv[]) {
 }
 
 void drawBackground(cairo_t *cr, int width, int height, int noiseScale, double hue, double hueRange, double sat, double val, int xoff, int yoff) {
-  for (int y=0;y<height;y++){
-    //Log progress
-    if (!y%10-9) progressBar("Drawing background",25,y+1,height);
-    for (int x=0;x<width;x++){
-      //Calculate hsv color and convert to rgb
-      HSV sourceHSV = {
-        perlin2d((float)x/noiseScale+xoff,(float)y/noiseScale+yoff,1,10)*hueRange+hue,
-        sat,
-        val
-      };
-      RGB sourceRGB = hsvToRGB(sourceHSV);
-      //Draw pixel at x,y
-      cairo_set_source_rgb(cr,sourceRGB.r,sourceRGB.g,sourceRGB.b);
-      cairo_rectangle (cr, x, y, 1, 1);
-      cairo_fill (cr);
+  if (val == 0) {
+    cairo_set_source_rgb(cr,0,0,0);
+    cairo_rectangle (cr,0,0,width,height);
+    cairo_fill (cr);
+  }
+  else if (sat == 0 && val == 1) {
+    cairo_set_source_rgb(cr,1,1,1);
+    cairo_rectangle (cr,0,0,width,height);
+    cairo_fill (cr);
+  }
+  else {
+    for (int y=0;y<height;y++){
+      //Log progress
+      if (!y%10-9) progressBar("Drawing background",25,y+1,height);
+      for (int x=0;x<width;x++){
+        //Calculate hsv color and convert to rgb
+        HSV sourceHSV = {
+          perlin2d((float)x/noiseScale+xoff,(float)y/noiseScale+yoff,1,10)*hueRange+hue,
+          sat,
+          val
+        };
+        RGB sourceRGB = hsvToRGB(sourceHSV);
+        //Draw pixel at x,y
+        cairo_set_source_rgb(cr,sourceRGB.r,sourceRGB.g,sourceRGB.b);
+        cairo_rectangle (cr, x, y, 1, 1);
+        cairo_fill (cr);
+      }
     }
   }
 }
