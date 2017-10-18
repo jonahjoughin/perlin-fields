@@ -39,8 +39,9 @@ float getDX(int width, int height, float x,float y,float noise,int mode) {
     case 8:
       return sin(noise*PI*2/2)*cos(noise*PI*2/3)*3;
     case 9:
-      xw = x/width;
-      return sin(noise*PI*2/4)*cos(noise*PI*2/3)*(1+2*xw*xw);
+      a = tan(noise*PI*8)*PI*2+5;
+      r = sin(noise*PI*8);
+      return cos(a)*r;
     default:
       return cos(noise*PI*2);
   }
